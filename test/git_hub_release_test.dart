@@ -44,7 +44,7 @@ void main() async {
   }
 
   // TODO update from main fork head eventually withTempDirAsync
-  await core.withTempDir((tempDir) async {
+  await core.withTempDirAsync((tempDir) async {
     final pathToProject = join(tempDir, 'aproject');
     final project = DartProject.create(pathTo: pathToProject, templateName: 'simple');
     await project.warmup();
