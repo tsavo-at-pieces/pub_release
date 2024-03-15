@@ -16,11 +16,9 @@ dependencies:
   pub_semver: ^2.1.4
   pubspec_manager: ^1.0.0-beta.1
   dcli:
-   path: ../dcli/dcli
   dcli_core:
-    path: ../dcli/dcli_core
   settings_yaml:
-    path: ../settings_yaml
+
 dev_dependencies:
   dependency_validator: ^3.2.3
   lint_hard: ^4.0.0
