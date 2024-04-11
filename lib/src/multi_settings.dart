@@ -7,7 +7,7 @@
 import 'package:dcli/dcli.dart';
 import 'package:path/path.dart';
 import 'package:pub_semver/pub_semver.dart';
-import 'package:pubspec_manager/pubspec_manager.dart' hide Version;
+import 'package:pubspec_manager/pubspec_manager.dart' show PubSpec;
 import 'package:settings_yaml/settings_yaml.dart';
 
 ///
@@ -28,16 +28,13 @@ class MultiSettings {
     final settings = SettingsYaml.load(pathToSettings: pathTo);
 
     for (final entry in settings.valueMap.entries) {
-      final package =
-          Package(entry.key, truepath(homeProjectPath, entry.value as String));
+      final package = Package(entry.key, truepath(homeProjectPath, entry.value as String));
       if (!exists(package.path)) {
-        throw PubReleaseException(
-            'The path ${package.path} for ${package.name} does not exist.');
+        throw PubReleaseException('The path ${package.path} for ${package.name} does not exist.');
       }
 
       if (!exists(join(package.path, 'pubspec.yaml'))) {
-        throw PubReleaseException(
-            'The pubspec.yaml for ${package.name} does not exist.');
+        throw PubReleaseException('The pubspec.yaml for ${package.name} does not exist.');
       }
 
       packages.add(package);
@@ -51,11 +48,9 @@ class MultiSettings {
 
   static String? _pathToHomeProject;
 
-  static set homeProjectPath(String pathToHomeProject) =>
-      _pathToHomeProject = pathToHomeProject;
+  static set homeProjectPath(String pathToHomeProject) => _pathToHomeProject = pathToHomeProject;
 
-  static String get homeProjectPath =>
-      _pathToHomeProject ?? DartProject.fromPath('.').pathToProjectRoot;
+  static String get homeProjectPath => _pathToHomeProject ?? DartProject.fromPath('.').pathToProjectRoot;
 
   bool hasDependencies() => packages.isNotEmpty;
 
@@ -76,13 +71,11 @@ class MultiSettings {
     try {
       for (final package in packages) {
         if (!exists(package.path)) {
-          throw PubReleaseException(
-              'The path ${package.path} for ${package.name} does not exist.');
+          throw PubReleaseException('The path ${package.path} for ${package.name} does not exist.');
         }
 
         if (!exists(join(package.path, 'pubspec.yaml'))) {
-          throw PubReleaseException(
-              'The pubspec.yaml for ${package.name} does not exist.');
+          throw PubReleaseException('The pubspec.yaml for ${package.name} does not exist.');
         }
       }
     } on PubReleaseException catch (e) {
@@ -103,8 +96,8 @@ class MultiSettings {
 
     for (final package in packages) {
       final pubspec = PubSpec.loadFromPath(join(package.path, 'pubspec.yaml'));
-      if (pubspec.version.getSemVersion().compareTo(highestVersion) > 0) {
-        highestVersion = pubspec.version.getSemVersion();
+      if (pubspec.version.semVersion.compareTo(highestVersion) > 0) {
+        highestVersion = pubspec.version.semVersion;
       }
     }
 

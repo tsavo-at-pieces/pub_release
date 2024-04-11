@@ -9,7 +9,7 @@ import 'dart:io';
 import 'package:dcli/dcli.dart';
 import 'package:path/path.dart';
 import 'package:pub_semver/pub_semver.dart' as sm;
-import 'package:pubspec_manager/pubspec_manager.dart';
+import 'package:pubspec_manager/pubspec_manager.dart' show Dependency, DependencyPubHosted, PubSpec;
 
 import '../pub_release.dart';
 
@@ -37,21 +37,18 @@ void multiRelease(
 
     // For a multi-release we must have at least one dependency
     if (!settings.hasDependencies()) {
-      printerr(red(
-          'The ${MultiSettings.filename} file in the $toolDir directory must'
+      printerr(red('The ${MultiSettings.filename} file in the $toolDir directory must'
           ' include at least one dependency.'));
       exit(1);
     }
 
-    print(
-        'Preparing a release for package ${orange(settings.packages.last.name)}'
+    print('Preparing a release for package ${orange(settings.packages.last.name)}'
         ' and its related dependencies.');
 
     _printDependencies(settings);
 
     // ignore: parameter_assignments
-    final determinedVersion =
-        _determineVersion(settings, versionMethod, passedVersion, autoAnswer);
+    final determinedVersion = _determineVersion(settings, versionMethod, passedVersion, autoAnswer);
     updateAllVersions(settings, determinedVersion);
 
     /// Ensure that we only ask the user for a version once.
@@ -67,8 +64,7 @@ void multiRelease(
       final release = ReleaseRunner(package.path);
       final pubspecDetails = release.checkPackage(autoAnswer: true);
 
-      if (!releaseDependency(
-          release, pubspecDetails, versionMethod, determinedVersion,
+      if (!releaseDependency(release, pubspecDetails, versionMethod, determinedVersion,
           dryrun: dryrun,
           lineLength: lineLength,
           format: format,
@@ -92,14 +88,12 @@ void multiRelease(
 /// Before we start lets check that everything looks to be in working order.
 MultiSettings checkPreConditions(String toolDir, {required bool useGit}) {
   if (!exists('pubspec.yaml')) {
-    printerr(red(
-        'You must run pub_release from the root of the main Dart project.'));
+    printerr(red('You must run pub_release from the root of the main Dart project.'));
     exit(1);
   }
   if (!MultiSettings.yamlExists()) {
-    printerr(
-        red("You must provide a ${MultiSettings.filename} file in the 'tool' "
-            'directory of the main dart package.'));
+    printerr(red("You must provide a ${MultiSettings.filename} file in the 'tool' "
+        'directory of the main dart package.'));
     exit(1);
   }
   final settings = MultiSettings.load();
@@ -148,8 +142,8 @@ String centre(String message, {String fill = '*'}) {
   return '${'*' * fillLeft} $message ${'*' * fillRight}';
 }
 
-bool releaseDependency(ReleaseRunner release, PubSpecDetails pubSpecDetails,
-        VersionMethod versionMethod, sm.Version? setVersion,
+bool releaseDependency(
+        ReleaseRunner release, PubSpecDetails pubSpecDetails, VersionMethod versionMethod, sm.Version? setVersion,
         {required int lineLength,
         required bool format,
         required bool runTests,
@@ -178,11 +172,9 @@ bool releaseDependency(ReleaseRunner release, PubSpecDetails pubSpecDetails,
 ///
 /// If [versionMethod] == [VersionMethod.set] then we take the version in
 /// [setVersion] and return it.
-sm.Version _determineVersion(MultiSettings settings,
-    VersionMethod versionMethod, sm.Version? setVersion, bool autoAnswer) {
-  assert(
-      (versionMethod == VersionMethod.set && setVersion != null) ||
-          versionMethod == VersionMethod.ask,
+sm.Version _determineVersion(
+    MultiSettings settings, VersionMethod versionMethod, sm.Version? setVersion, bool autoAnswer) {
+  assert((versionMethod == VersionMethod.set && setVersion != null) || versionMethod == VersionMethod.ask,
       'must use set or ask');
 
   late final sm.Version _setVersion;
@@ -197,8 +189,7 @@ sm.Version _determineVersion(MultiSettings settings,
   /// Check that the selected version is higher then the current highest
   /// version.
   if (!autoAnswer && _setVersion.compareTo(highestVersion) < 0) {
-    print(orange(
-        'The selected version $_setVersion should be higher than any current '
+    print(orange('The selected version $_setVersion should be higher than any current '
         'version ($highestVersion) '));
     print('If you try to publish a version that is already published then the '
         'publish action will fail.');
@@ -251,7 +242,7 @@ void updateAllVersions(MultiSettings settings, sm.Version version) {
         final known = findKnown(knownProjects, dependency);
         if (known != null) {
           if (dependency is DependencyPubHosted) {
-            dependency.version = hatVersion;
+            dependency.versionConstraint = hatVersion;
           }
         }
       }

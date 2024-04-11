@@ -10,13 +10,13 @@ import 'dart:io' as io;
 import 'package:dcli/dcli.dart';
 import 'package:path/path.dart';
 import 'package:pub_semver/pub_semver.dart' as sm;
-import 'package:pubspec_manager/pubspec_manager.dart' hide Version;
+import 'package:pubspec_manager/pubspec_manager.dart' show PubSpec;
 
 import 'git.dart';
 import 'multi_settings.dart';
 import 'pubspec_helper.dart';
 import 'run_hooks.dart';
-import 'version/version.dart';
+import 'version/version.dart' show askForVersion, updateVersionFromDetails, versionLibraryPath;
 
 enum VersionMethod {
   ask,
@@ -47,43 +47,33 @@ class ReleaseRunner {
         runRelease: () {
           final projectRootPath = dirname(pubSpecDetails.path);
 
-          final newVersion = determineAndUpdateVersion(
-              versionMethod, setVersion, pubSpecDetails,
-              dryrun: dryrun);
+          final newVersion = determineAndUpdateVersion(versionMethod, setVersion, pubSpecDetails, dryrun: dryrun);
 
           runPubGet(projectRootPath);
 
           if (runTests) {
-            if (!doRunTests(projectRootPath,
-                tags: tags, excludeTags: excludeTags)) {
-              throw UnitTestFailedException(
-                  'Some unit tests failed. Release has been halted.');
+            if (!doRunTests(projectRootPath, tags: tags, excludeTags: excludeTags)) {
+              throw UnitTestFailedException('Some unit tests failed. Release has been halted.');
             }
           }
 
           final usingGit = useGit && gitChecks(projectRootPath);
 
-          runPreReleaseHooks(projectRootPath,
-              version: newVersion, dryrun: dryrun);
-          prepareReleaseNotes(projectRootPath, newVersion,
-              pubSpecDetails.pubspec.version.getSemVersion(),
+          runPreReleaseHooks(projectRootPath, version: newVersion, dryrun: dryrun);
+          prepareReleaseNotes(projectRootPath, newVersion, pubSpecDetails.pubspec.version.semVersion,
               usingGit: usingGit, autoAnswer: autoAnswer, dryrun: dryrun);
-          prepareCode(projectRootPath, lineLength,
-              format: format, usingGit: usingGit);
+          prepareCode(projectRootPath, lineLength, format: format, usingGit: usingGit);
 
-          commitRelease(newVersion, projectRootPath,
-              usingGit: usingGit, autoAnswer: autoAnswer, dryrun: dryrun);
+          commitRelease(newVersion, projectRootPath, usingGit: usingGit, autoAnswer: autoAnswer, dryrun: dryrun);
 
           // protect the pubspec.yaml as need to remove the
           // overrides
           withFileProtection([pubSpecDetails.path], () {
             pubSpecDetails.removeOverrides();
-            success = publish(pubSpecDetails.path,
-                autoAnswer: autoAnswer, dryrun: dryrun);
+            success = publish(pubSpecDetails.path, autoAnswer: autoAnswer, dryrun: dryrun);
           });
 
-          runPostReleaseHooks(projectRootPath,
-              version: newVersion, dryrun: dryrun);
+          runPostReleaseHooks(projectRootPath, version: newVersion, dryrun: dryrun);
 
           if (!success) {
             printerr(red('The publish attempt failed.'));
@@ -128,17 +118,13 @@ class ReleaseRunner {
     return usingGit;
   }
 
-  void prepareReleaseNotes(
-      String projectRootPath, sm.Version newVersion, sm.Version? currentVersion,
-      {required bool usingGit,
-      required bool autoAnswer,
-      required bool dryrun}) {
+  void prepareReleaseNotes(String projectRootPath, sm.Version newVersion, sm.Version? currentVersion,
+      {required bool usingGit, required bool autoAnswer, required bool dryrun}) {
     /// the change log is backed up as part of the dry run
     /// and restored afterwoods.
     if (!doReleaseNotesExist(newVersion)) {
       print('Generating release notes.');
-      generateReleaseNotes(newVersion, currentVersion,
-          autoAnswer: autoAnswer, dryrun: dryrun);
+      generateReleaseNotes(newVersion, currentVersion, autoAnswer: autoAnswer, dryrun: dryrun);
       if (!dryrun && usingGit) {
         // final git = Git(projectRootPath);
         // print('Committing release notes and versioned files');
@@ -165,20 +151,16 @@ class ReleaseRunner {
 
   /// Ensure that all code is correctly formatted.
   /// and that it passes all tests.
-  void prepareCode(String projectRootPath, int lineLength,
-      {required bool format, required bool usingGit}) {
+  void prepareCode(String projectRootPath, int lineLength, {required bool format, required bool usingGit}) {
     // ensure that all code is correctly formatted.
     if (format) {
       _formatCode(projectRootPath, usingGit: usingGit, lineLength: lineLength);
     }
 
-    final progress = start('dart analyze',
-        workingDirectory: projectRootPath,
-        nothrow: true,
-        progress: Progress.print());
+    final progress =
+        start('dart analyze', workingDirectory: projectRootPath, nothrow: true, progress: Progress.print());
     if (progress.exitCode != 0) {
-      printerr(
-          red('dart analyze failed. Please fix the errors and try again.'));
+      printerr(red('dart analyze failed. Please fix the errors and try again.'));
       io.exit(1);
     }
   }
@@ -189,56 +171,46 @@ class ReleaseRunner {
     PubSpecDetails pubspecDetails, {
     required bool dryrun,
   }) {
-    var newVersion =
-        passedVersion ?? pubspecDetails.pubspec.version.getSemVersion();
+    var newVersion = passedVersion ?? pubspecDetails.pubspec.version.semVersion;
 
     if (versionMethod == VersionMethod.set) {
       // we were passed the new version so just updated everything.
       updateVersionFromDetails(newVersion, pubspecDetails);
     } else {
       // Ask the user for the new version
-      newVersion =
-          askForVersion(pubspecDetails.pubspec.version.getSemVersion());
+      newVersion = askForVersion(pubspecDetails.pubspec.version.semVersion);
       updateVersionFromDetails(newVersion, pubspecDetails);
     }
     return newVersion;
   }
 
-  void _formatCode(String projectRootPath,
-      {required bool usingGit, required int lineLength}) {
+  void _formatCode(String projectRootPath, {required bool usingGit, required int lineLength}) {
     // ensure that all code is correctly formatted.
     print('Formatting code...');
 
-    _formatCodeInDirectory(
-        join(projectRootPath, 'bin'), usingGit, lineLength, projectRootPath);
-    _formatCodeInDirectory(
-        join(projectRootPath, 'lib'), usingGit, lineLength, projectRootPath);
-    _formatCodeInDirectory(
-        join(projectRootPath, 'test'), usingGit, lineLength, projectRootPath);
+    _formatCodeInDirectory(join(projectRootPath, 'bin'), usingGit, lineLength, projectRootPath);
+    _formatCodeInDirectory(join(projectRootPath, 'lib'), usingGit, lineLength, projectRootPath);
+    _formatCodeInDirectory(join(projectRootPath, 'test'), usingGit, lineLength, projectRootPath);
   }
 
-  void _formatCodeInDirectory(
-      String srcPath, bool usingGit, int lineLength, String workingDirectory) {
+  void _formatCodeInDirectory(String srcPath, bool usingGit, int lineLength, String workingDirectory) {
     final output = <String>[];
 
     if (exists(srcPath) && !isEmpty(srcPath)) {
-      'dart format --summary none --line-length=$lineLength $srcPath'
-          .forEach(output.add, stderr: print);
+      'dart format --summary none --line-length=$lineLength $srcPath'.forEach(output.add, stderr: print);
 
       if (usingGit) {
         for (final line in output) {
           if (line.startsWith('Formatted')) {
             final filePath = line.substring('Formatted '.length);
-            'git add ${join(srcPath, filePath)}'
-                .start(workingDirectory: workingDirectory);
+            'git add ${join(srcPath, filePath)}'.start(workingDirectory: workingDirectory);
           }
         }
       }
     }
   }
 
-  bool publish(String pubspecPath,
-      {required bool autoAnswer, required bool dryrun}) {
+  bool publish(String pubspecPath, {required bool autoAnswer, required bool dryrun}) {
     final projectRoot = dirname(pubspecPath);
 
     final version = sm.Version.parse(io.Platform.version.split(' ')[0]);
@@ -258,11 +230,8 @@ class ReleaseRunner {
     //   throw PubReleaseException('The publish attempt failed.');
     // }
 
-    final progress = cmd.start(
-        terminal: true,
-        workingDirectory: projectRoot,
-        progress: Progress.print(),
-        nothrow: true);
+    final progress =
+        cmd.start(terminal: true, workingDirectory: projectRoot, progress: Progress.print(), nothrow: true);
 
     return progress.exitCode == 0;
   }
@@ -315,9 +284,7 @@ class ReleaseRunner {
     read(changeLogPath).toList().forEach(tmpReleaseNotes.append);
 
     // give the user a chance to clean up the change log.
-    if (!autoAnswer &&
-        !dryrun &&
-        confirm('Would you like to edit the $changeLogPath notes')) {
+    if (!autoAnswer && !dryrun && confirm('Would you like to edit the $changeLogPath notes')) {
       showEditor(tmpReleaseNotes);
     }
 
@@ -351,9 +318,7 @@ class ReleaseRunner {
     final pubspec = PubSpec.loadFromPath(pubspecPath);
 
     pubspec.version.setSemVersion(
-        pubspec.version.getSemVersion() == sm.Version.none
-            ? sm.Version.parse('0.0.1')
-            : pubspec.version.getSemVersion());
+        pubspec.version.semVersion == sm.Version.none ? sm.Version.parse('0.0.1') : pubspec.version.semVersion);
 
     print('');
     print(green('Found ${pubspec.name} version ${pubspec.version}'));
@@ -398,17 +363,14 @@ class ReleaseRunner {
     }
   }
 
-  bool doRunTests(String projectRootPath,
-      {required String? tags, required String? excludeTags}) {
+  bool doRunTests(String projectRootPath, {required String? tags, required String? excludeTags}) {
     if (which('critical_test').notfound) {
       print(blue('Installing dart package critical_test'));
-      'dart pub global activate critical_test'
-          .start(progress: Progress.printStdErr());
+      'dart pub global activate critical_test'.start(progress: Progress.printStdErr());
     }
     if (which('critical_test').notfound) {
-      printerr(
-          red('Please install the dart package critical_test and try again. '
-              '"dart pub global activate critical_test"'));
+      printerr(red('Please install the dart package critical_test and try again. '
+          '"dart pub global activate critical_test"'));
       io.exit(1);
     }
     // critical_test generates a file to track failed tests
@@ -443,9 +405,7 @@ class ReleaseRunner {
 }
 
 bool whichEx(String exeName) =>
-    which(exeName).found ||
-    (io.Platform.isWindows &&
-        (which('$exeName.exe').found || which('$exeName.exe').found));
+    which(exeName).found || (io.Platform.isWindows && (which('$exeName.exe').found || which('$exeName.exe').found));
 
 String exeName(String exeName) => which(exeName).path!;
 
