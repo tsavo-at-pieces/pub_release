@@ -28,7 +28,10 @@ void main() async {
   }
 
   final ghr = SimpleGitHub(
-      username: settings.username!, apiToken: settings.apiToken!, owner: settings.owner!, repository: 'dcli')
+      username: settings.username!,
+      apiToken: settings.apiToken!,
+      owner: settings.owner!,
+      repository: 'dcli')
     ..auth();
 
   const tagName = '0.0.3-test';
@@ -46,10 +49,12 @@ void main() async {
   // TODO update from main fork head eventually withTempDirAsync
   await core.withTempDirAsync((tempDir) async {
     final pathToProject = join(tempDir, 'aproject');
-    final project = DartProject.create(pathTo: pathToProject, templateName: 'simple');
+    final project =
+        DartProject.create(pathTo: pathToProject, templateName: 'simple');
     await project.warmup();
     project.compile();
-    final exe = DartScript.fromFile(join(project.pathToBinDir, 'aproject.dart')).pathToExe;
+    final exe = DartScript.fromFile(join(project.pathToBinDir, 'aproject.dart'))
+        .pathToExe;
 
     print('Creating release: $tagName');
     var release = await ghr.release(tagName: tagName);
@@ -66,7 +71,8 @@ void main() async {
     print('send complete');
 
     /// update latest tag to point to this new tag.
-    final latest = await ghr.getReleaseByTagName(tagName: 'latest.${Platform.operatingSystem}');
+    final latest = await ghr.getReleaseByTagName(
+        tagName: 'latest.${Platform.operatingSystem}');
     if (latest != null) {
       ghr.deleteRelease(latest);
     }

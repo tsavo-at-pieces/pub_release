@@ -17,9 +17,11 @@ Version? version({required String pubspecPath}) {
   return pubspec.version.semVersion;
 }
 
-String versionPath(String pathToPackgeRoot) => join(pathToPackgeRoot, 'lib', 'src', 'version');
+String versionPath(String pathToPackgeRoot) =>
+    join(pathToPackgeRoot, 'lib', 'src', 'version');
 
-String versionLibraryPath(String pathToPackgeRoot) => join(versionPath(pathToPackgeRoot), 'version.g.dart');
+String versionLibraryPath(String pathToPackgeRoot) =>
+    join(versionPath(pathToPackgeRoot), 'version.g.dart');
 
 /// Makes a backup copy of the version.g.dart source file.
 void backupVersionLibrary(String pathToPackageRoot) {
@@ -45,7 +47,8 @@ Version getHigestVersionNo(String pathToPrimaryPackage) {
   final pathTo = join(pathToPrimaryPackage, 'tool', MultiSettings.filename);
 
   if (!exists(pathTo)) {
-    throw PubReleaseException('The ${MultiSettings.filename} was not found at ${dirname(pathTo)}.');
+    throw PubReleaseException(
+        'The ${MultiSettings.filename} was not found at ${dirname(pathTo)}.');
   }
 
   final settings = MultiSettings.load(pathTo: pathToPrimaryPackage);
@@ -60,7 +63,8 @@ void updateVersion(Version newVersion, PubSpec pubspec, String pathToPubSpec) {
 
 /// Updates the pubspec.yaml and versiong.g.dart with the
 /// new version no.
-void updateVersionFromDetails(Version newVersion, PubSpecDetails pubspecDetails) {
+void updateVersionFromDetails(
+    Version newVersion, PubSpecDetails pubspecDetails) {
   print('');
 
   // recreate the version file
@@ -99,16 +103,20 @@ sm.Version askForVersion(Version currentVersion) {
 
   print('');
   print(blue('What sort of changes have been made since the last release?'));
-  final selected = menu('Select the change level:', options: options)..requestVersion();
+  final selected = menu('Select the change level:', options: options)
+    ..requestVersion();
 
   return confirmVersion(selected.version);
 }
 
 List<NewVersion> determineVersionToOffer(Version currentVersion) {
-  final newVersions = <NewVersion>[NewVersion('Keep the current Version'.padRight(25), currentVersion)];
+  final newVersions = <NewVersion>[
+    NewVersion('Keep the current Version'.padRight(25), currentVersion)
+  ];
 
   if (!currentVersion.isPreRelease) {
-    return newVersions..addAll(defaultVersionToOffer(currentVersion, includePre: true));
+    return newVersions
+      ..addAll(defaultVersionToOffer(currentVersion, includePre: true));
   } else {
     final pre = currentVersion.preRelease;
 
@@ -116,24 +124,31 @@ List<NewVersion> determineVersionToOffer(Version currentVersion) {
     if (pre.length != 2 || pre[0] is! String || pre[1] is! int) {
       /// don't know how to handle pre-release versions that don't
       /// start with a string such as dev, alpha or beta
-      return newVersions..addAll(defaultVersionToOffer(currentVersion, includePre: true));
+      return newVersions
+        ..addAll(defaultVersionToOffer(currentVersion, includePre: true));
     }
     final type = pre[0] as String;
     final preVersion = pre[1] as int;
     switch (type) {
       case 'beta':
-        newVersions.addAll([NewVersion('Small Patch'.padRight(25), buildPre(currentVersion, 'beta', preVersion + 1))]);
+        newVersions.addAll([
+          NewVersion('Small Patch'.padRight(25),
+              buildPre(currentVersion, 'beta', preVersion + 1))
+        ]);
         break;
       case 'alpha':
         newVersions.addAll([
-          NewVersion('Alpha'.padRight(25), buildPre(currentVersion, 'alpha', preVersion + 1)),
+          NewVersion('Alpha'.padRight(25),
+              buildPre(currentVersion, 'alpha', preVersion + 1)),
           NewVersion('Beta'.padRight(25), buildPre(currentVersion, 'beta', 1))
         ]);
         break;
       default:
         newVersions.addAll([
-          NewVersion('Small Patch'.padRight(25), buildPre(currentVersion, 'dev', preVersion + 1)),
-          NewVersion('Alpha'.padRight(25), buildPre(currentVersion, 'alpha', 1)),
+          NewVersion('Small Patch'.padRight(25),
+              buildPre(currentVersion, 'dev', preVersion + 1)),
+          NewVersion(
+              'Alpha'.padRight(25), buildPre(currentVersion, 'alpha', 1)),
           NewVersion('Beta'.padRight(25), buildPre(currentVersion, 'beta', 1))
         ]);
 
@@ -148,11 +163,14 @@ List<NewVersion> determineVersionToOffer(Version currentVersion) {
 }
 
 Version buildPre(Version currentVersion, String preType, int preVersion) =>
-    Version(currentVersion.major, currentVersion.minor, currentVersion.patch, pre: '$preType.$preVersion');
+    Version(currentVersion.major, currentVersion.minor, currentVersion.patch,
+        pre: '$preType.$preVersion');
 
-List<NewVersion> defaultVersionToOffer(Version currentVersion, {bool includePre = false}) {
+List<NewVersion> defaultVersionToOffer(Version currentVersion,
+    {bool includePre = false}) {
   final versions = <NewVersion>[
-    NewVersion((includePre ? 'Small Patch' : 'Release').padRight(25), currentVersion.nextPatch)
+    NewVersion((includePre ? 'Small Patch' : 'Release').padRight(25),
+        currentVersion.nextPatch)
   ];
 
   var minor = currentVersion.nextMinor;
@@ -163,7 +181,8 @@ List<NewVersion> defaultVersionToOffer(Version currentVersion, {bool includePre 
     ..add(NewVersion('Non-breaking change'.padRight(25), minor))
     ..addAll([
       NewVersion('Breaking change'.padRight(25), currentVersion.nextBreaking),
-      if (includePre) PreReleaseVersion('Pre-release'.padRight(25), currentVersion),
+      if (includePre)
+        PreReleaseVersion('Pre-release'.padRight(25), currentVersion),
       CustomVersion('Enter custom version no.'.padRight(25))
     ]);
   return versions;
@@ -235,7 +254,8 @@ class CustomVersion extends NewVersion {
     var valid = false;
     do {
       try {
-        final entered = ask('Enter the new Version No.:', validator: Ask.required);
+        final entered =
+            ask('Enter the new Version No.:', validator: Ask.required);
         _version = Version.parse(entered);
         valid = true;
       } on FormatException catch (e) {
@@ -292,7 +312,8 @@ class PreReleaseVersion extends NewVersion {
     if (!version.isPreRelease) {
       assert(type != null, 'If version is a prerelease you must pass a type');
       final selected = '$type.1';
-      small = Version(version.major, version.minor, version.patch + 1, pre: selected);
+      small = Version(version.major, version.minor, version.patch + 1,
+          pre: selected);
 
       nonBreaking = Version(version.major, version.minor + 1, 0, pre: selected);
 

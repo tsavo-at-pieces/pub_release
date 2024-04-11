@@ -6,7 +6,8 @@
 
 import 'package:dcli/dcli.dart';
 import 'package:path/path.dart';
-import 'package:pubspec_manager/pubspec_manager.dart' show PubSpec, DependencyBuilderPath;
+import 'package:pubspec_manager/pubspec_manager.dart'
+    show PubSpec, DependencyBuilderPath;
 
 import 'multi_settings.dart' show MultiSettings;
 
@@ -52,7 +53,8 @@ void addOverrides(String pathToProjectRoot) {
 /// as an override.
 /// Assumes that the packages don't already exists in [multiSettings]
 ///
-void _addOverrides(String pathToProjectRoot, PubSpec pubspec, MultiSettings multiSettings) {
+void _addOverrides(
+    String pathToProjectRoot, PubSpec pubspec, MultiSettings multiSettings) {
   for (final package in multiSettings.packages) {
     // we don't add an override to ourselves
     if (package.name == pubspec.name.value) {
@@ -66,7 +68,8 @@ void _addOverrides(String pathToProjectRoot, PubSpec pubspec, MultiSettings mult
     }
 
     final path = relative(package.path, from: pathToProjectRoot);
-    pubspec.dependencyOverrides.add(DependencyBuilderPath(name: package.name, path: path));
+    pubspec.dependencyOverrides
+        .add(DependencyBuilderPath(name: package.name, path: path));
   }
 }
 

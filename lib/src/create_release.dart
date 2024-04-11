@@ -16,8 +16,16 @@ import 'package:pubspec_manager/pubspec_manager.dart';
 import '../pub_release.dart';
 
 Future<void> createRelease(
-    {required String username, required String apiToken, required String owner, required String repository}) async {
-  final sgh = SimpleGitHub(username: username, apiToken: apiToken, owner: owner, repository: repository)..auth();
+    {required String username,
+    required String apiToken,
+    required String owner,
+    required String repository}) async {
+  final sgh = SimpleGitHub(
+      username: username,
+      apiToken: apiToken,
+      owner: owner,
+      repository: repository)
+    ..auth();
 
   final pubspecPath = findPubSpec(startingDir: pwd);
 
@@ -41,7 +49,8 @@ Future<void> createRelease(
 }
 
 /// update 'latest.<platform>' tag to point to this new tag.
-Future<void> updateLatestTag({required SimpleGitHub sgh, required PubSpec pubspec}) async {
+Future<void> updateLatestTag(
+    {required SimpleGitHub sgh, required PubSpec pubspec}) async {
   final latestTagName = 'latest.${io.Platform.operatingSystem}';
   print('Updating $latestTagName tag to point to "${pubspec.version}"');
 
@@ -85,7 +94,8 @@ Future<void> _createRelease({
   addExecutablesAsAssets(sgh, pubspec, release);
 }
 
-void addExecutablesAsAssets(SimpleGitHub ghr, PubSpec pubspec, ghub.Release release) {
+void addExecutablesAsAssets(
+    SimpleGitHub ghr, PubSpec pubspec, ghub.Release release) {
   final executables = pubspec.executables;
 
   for (final executable in executables.list) {
@@ -98,7 +108,8 @@ void addExecutableAsset(SimpleGitHub ghr, ghub.Release release, String script) {
   String? mimeType;
   var assetPath = join(dirname(script), basenameWithoutExtension(script));
   if (io.Platform.isWindows) {
-    assetPath = '${join(dirname(script), basenameWithoutExtension(script))}.exe';
+    assetPath =
+        '${join(dirname(script), basenameWithoutExtension(script))}.exe';
     mimeType = lookupMimeType(assetPath);
   } else {
     assetPath = join(dirname(script), basenameWithoutExtension(script));
@@ -117,7 +128,8 @@ void addExecutableAsset(SimpleGitHub ghr, ghub.Release release, String script) {
 /// If [mimeType] is not supplied then the extension of the [assetPath] is
 /// used to determine the [mimeType].
 ///
-void addAsset(SimpleGitHub ghr, ghub.Release release, {required String assetPath, String? mimeType}) {
+void addAsset(SimpleGitHub ghr, ghub.Release release,
+    {required String assetPath, String? mimeType}) {
   mimeType ??= lookupMimeType(assetPath);
 
   print('Sending Asset  $assetPath mimeType: $mimeType');
