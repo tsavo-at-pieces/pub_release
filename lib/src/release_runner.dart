@@ -354,7 +354,7 @@ class ReleaseRunner {
         : pubspec.version.semVersion);
 
     print('');
-    print(green('Found ${pubspec.name} version ${pubspec.version}'));
+    print(green('Found ${pubspec.name.value} version ${pubspec.version}'));
 
     print('');
 
