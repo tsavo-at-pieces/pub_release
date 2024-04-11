@@ -9,7 +9,8 @@ import 'dart:io';
 import 'package:dcli/dcli.dart';
 import 'package:path/path.dart';
 import 'package:pub_semver/pub_semver.dart' as sm;
-import 'package:pubspec_manager/pubspec_manager.dart';
+import 'package:pubspec_manager/pubspec_manager.dart'
+    show Dependency, DependencyPubHosted, PubSpec;
 
 import '../pub_release.dart';
 
@@ -251,7 +252,7 @@ void updateAllVersions(MultiSettings settings, sm.Version version) {
         final known = findKnown(knownProjects, dependency);
         if (known != null) {
           if (dependency is DependencyPubHosted) {
-            dependency.version = hatVersion;
+            dependency.versionConstraint = hatVersion;
           }
         }
       }

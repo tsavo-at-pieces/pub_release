@@ -10,13 +10,14 @@ import 'dart:io' as io;
 import 'package:dcli/dcli.dart';
 import 'package:path/path.dart';
 import 'package:pub_semver/pub_semver.dart' as sm;
-import 'package:pubspec_manager/pubspec_manager.dart' hide Version;
+import 'package:pubspec_manager/pubspec_manager.dart' show PubSpec;
 
 import 'git.dart';
 import 'multi_settings.dart';
 import 'pubspec_helper.dart';
 import 'run_hooks.dart';
-import 'version/version.dart';
+import 'version/version.dart'
+    show askForVersion, updateVersionFromDetails, versionLibraryPath;
 
 enum VersionMethod {
   ask,
@@ -66,7 +67,7 @@ class ReleaseRunner {
           runPreReleaseHooks(projectRootPath,
               version: newVersion, dryrun: dryrun);
           prepareReleaseNotes(projectRootPath, newVersion,
-              pubSpecDetails.pubspec.version.getSemVersion(),
+              pubSpecDetails.pubspec.version.semVersion,
               usingGit: usingGit, autoAnswer: autoAnswer, dryrun: dryrun);
           prepareCode(projectRootPath, lineLength,
               format: format, usingGit: usingGit);
@@ -189,16 +190,14 @@ class ReleaseRunner {
     PubSpecDetails pubspecDetails, {
     required bool dryrun,
   }) {
-    var newVersion =
-        passedVersion ?? pubspecDetails.pubspec.version.getSemVersion();
+    var newVersion = passedVersion ?? pubspecDetails.pubspec.version.semVersion;
 
     if (versionMethod == VersionMethod.set) {
       // we were passed the new version so just updated everything.
       updateVersionFromDetails(newVersion, pubspecDetails);
     } else {
       // Ask the user for the new version
-      newVersion =
-          askForVersion(pubspecDetails.pubspec.version.getSemVersion());
+      newVersion = askForVersion(pubspecDetails.pubspec.version.semVersion);
       updateVersionFromDetails(newVersion, pubspecDetails);
     }
     return newVersion;
@@ -350,10 +349,9 @@ class ReleaseRunner {
 
     final pubspec = PubSpec.loadFromPath(pubspecPath);
 
-    pubspec.version.setSemVersion(
-        pubspec.version.getSemVersion() == sm.Version.none
-            ? sm.Version.parse('0.0.1')
-            : pubspec.version.getSemVersion());
+    pubspec.version.setSemVersion(pubspec.version.semVersion == sm.Version.none
+        ? sm.Version.parse('0.0.1')
+        : pubspec.version.semVersion);
 
     print('');
     print(green('Found ${pubspec.name} version ${pubspec.version}'));

@@ -4,7 +4,7 @@ import 'package:dcli/dcli.dart';
 import 'package:meta/meta.dart';
 import 'package:path/path.dart';
 import 'package:pub_semver/pub_semver.dart' as sm;
-import 'package:pubspec_manager/pubspec_manager.dart' hide Version;
+import 'package:pubspec_manager/pubspec_manager.dart' show PubSpec;
 
 import '../../pub_release.dart';
 
@@ -14,7 +14,7 @@ import '../../pub_release.dart';
 ///
 Version? version({required String pubspecPath}) {
   final pubspec = PubSpec.loadFromPath(pubspecPath);
-  return pubspec.version.getSemVersion();
+  return pubspec.version.semVersion;
 }
 
 String versionPath(String pathToPackgeRoot) =>

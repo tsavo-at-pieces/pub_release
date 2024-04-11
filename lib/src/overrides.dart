@@ -6,9 +6,10 @@
 
 import 'package:dcli/dcli.dart';
 import 'package:path/path.dart';
-import 'package:pubspec_manager/pubspec_manager.dart';
+import 'package:pubspec_manager/pubspec_manager.dart'
+    show PubSpec, DependencyBuilderPath;
 
-import 'multi_settings.dart';
+import 'multi_settings.dart' show MultiSettings;
 
 ///
 /// Manages updating the pubspec.yaml dependency overrides.
@@ -68,7 +69,7 @@ void _addOverrides(
 
     final path = relative(package.path, from: pathToProjectRoot);
     pubspec.dependencyOverrides
-        .append(DependencyPathBuilder(name: package.name, path: path));
+        .add(DependencyBuilderPath(name: package.name, path: path));
   }
 }
 

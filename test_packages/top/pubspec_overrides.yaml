@@ -1,0 +1,6 @@
+# melos_managed_dependency_overrides: xxxxx_bottom,xxxxx_middle
+dependency_overrides:
+  xxxxx_bottom:
+    path: ../bottom
+  xxxxx_middle:
+    path: ../middle

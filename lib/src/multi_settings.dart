@@ -7,7 +7,7 @@
 import 'package:dcli/dcli.dart';
 import 'package:path/path.dart';
 import 'package:pub_semver/pub_semver.dart';
-import 'package:pubspec_manager/pubspec_manager.dart' hide Version;
+import 'package:pubspec_manager/pubspec_manager.dart' show PubSpec;
 import 'package:settings_yaml/settings_yaml.dart';
 
 ///
@@ -103,8 +103,8 @@ class MultiSettings {
 
     for (final package in packages) {
       final pubspec = PubSpec.loadFromPath(join(package.path, 'pubspec.yaml'));
-      if (pubspec.version.getSemVersion().compareTo(highestVersion) > 0) {
-        highestVersion = pubspec.version.getSemVersion();
+      if (pubspec.version.semVersion.compareTo(highestVersion) > 0) {
+        highestVersion = pubspec.version.semVersion;
       }
     }
 
