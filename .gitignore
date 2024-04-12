@@ -35,3 +35,4 @@ bin/github_release.exe
 bin/pub_release.exe
 .failed_tracker.bak
 tool/.pubrelease.yaml
+pubspec.lock
