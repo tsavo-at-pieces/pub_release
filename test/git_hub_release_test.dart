@@ -46,12 +46,13 @@ void main() async {
     print('release not found');
   }
 
-  // TODO update from main fork head eventually withTempDirAsync
   await core.withTempDirAsync((tempDir) async {
     final pathToProject = join(tempDir, 'aproject');
     final project =
         DartProject.create(pathTo: pathToProject, templateName: 'simple');
-    (project..warmup()).compile();
+    await project.warmup();
+    await project.compile();
+
     final exe = DartScript.fromFile(join(project.pathToBinDir, 'aproject.dart'))
         .pathToExe;
 
